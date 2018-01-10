@@ -69,7 +69,7 @@ func NewNetworks(kvstore *KVStore) (*Networks, error) {
 
 func (ss *Networks) Put(Network *types.NetworkResource) error {
 	v := NewNetwork(Network)
-	return ss.proxy.Put(v.ID, v)
+	return ss.proxy.Put(v.Name, v)
 }
 
 func (ss *Networks) Delete(k string) error {
@@ -103,7 +103,7 @@ func (ss *Networks) List(recursive bool) (map[string]*Network, error) {
 func (ss *Networks) Sync(ls []types.NetworkResource) error {
 	lsm := make(map[string]interface{})
 	for _, s := range ls {
-		lsm[s.ID] = NewNetwork(&s)
+		lsm[s.Name] = NewNetwork(&s)
 	}
 	return ss.proxy.Sync(lsm)
 }

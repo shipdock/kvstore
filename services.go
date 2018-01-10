@@ -111,7 +111,7 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 
 func (ss *Services) Put(service *swarm.Service) error {
 	v := ss.NewService(service)
-	return ss.proxy.Put(v.ID, v)
+	return ss.proxy.Put(v.Name, v)
 }
 
 func (ss *Services) Delete(k string) error {
@@ -145,7 +145,7 @@ func (ss *Services) List(recursive bool) (map[string]*Service, error) {
 func (ss *Services) Sync(ls []swarm.Service) error {
 	lsm := make(map[string]interface{})
 	for _, s := range ls {
-		lsm[s.ID] = ss.NewService(&s)
+		lsm[s.Spec.Name] = ss.NewService(&s)
 	}
 	return ss.proxy.Sync(lsm)
 }

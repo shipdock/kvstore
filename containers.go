@@ -99,7 +99,7 @@ func NewContainers(kvstore *KVStore) (*Containers, error) {
 
 func (ss *Containers) Put(container *types.Container) error {
 	c := NewContainer(container)
-	return ss.proxy.Put(c.ID, c)
+	return ss.proxy.Put(c.Name, c)
 }
 
 func (ss *Containers) Delete(k string) error {
@@ -134,7 +134,7 @@ func (ss *Containers) Sync(ls []types.Container) error {
 	lsm := make(map[string]interface{})
 	for _, container := range ls {
 		c := NewContainer(&container)
-		lsm[c.ID] = c
+		lsm[c.Name] = c
 	}
 	return ss.proxy.Sync(lsm)
 }
