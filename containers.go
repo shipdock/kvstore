@@ -18,6 +18,7 @@ type NetInfo struct {
 }
 
 type Container struct {
+	ID          string
 	Name        string
 	ServiceName string
 	TaskNum     string
@@ -44,6 +45,7 @@ func NewContainer(base *types.Container) *Container {
 		}
 	}
 	c := &Container{
+		ID:          base.ID,
 		Name:        containerName(base),
 		ServiceName: sn,
 		TaskNum:     tn,
@@ -97,7 +99,7 @@ func NewContainers(kvstore *KVStore) (*Containers, error) {
 
 func (ss *Containers) Put(container *types.Container) error {
 	c := NewContainer(container)
-	return ss.proxy.Put(c.Name, c)
+	return ss.proxy.Put(c.ID, c)
 }
 
 func (ss *Containers) Delete(k string) error {
@@ -132,7 +134,7 @@ func (ss *Containers) Sync(ls []types.Container) error {
 	lsm := make(map[string]interface{})
 	for _, container := range ls {
 		c := NewContainer(&container)
-		lsm[c.Name] = c
+		lsm[c.ID] = c
 	}
 	return ss.proxy.Sync(lsm)
 }

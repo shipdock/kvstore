@@ -10,6 +10,7 @@ import (
 )
 
 type Network struct {
+	ID        string
 	Name      string
 	Owner     string
 	OwnerName string
@@ -20,6 +21,7 @@ type Network struct {
 
 func NewNetwork(base *types.NetworkResource) *Network {
 	n := &Network{
+		ID:     base.ID,
 		Name:   base.Name,
 		Driver: base.Driver,
 		Config: base.IPAM.Config,
@@ -67,7 +69,7 @@ func NewNetworks(kvstore *KVStore) (*Networks, error) {
 
 func (ss *Networks) Put(Network *types.NetworkResource) error {
 	v := NewNetwork(Network)
-	return ss.proxy.Put(v.Name, v)
+	return ss.proxy.Put(v.ID, v)
 }
 
 func (ss *Networks) Delete(k string) error {
@@ -101,7 +103,7 @@ func (ss *Networks) List(recursive bool) (map[string]*Network, error) {
 func (ss *Networks) Sync(ls []types.NetworkResource) error {
 	lsm := make(map[string]interface{})
 	for _, s := range ls {
-		lsm[s.Name] = NewNetwork(&s)
+		lsm[s.ID] = NewNetwork(&s)
 	}
 	return ss.proxy.Sync(lsm)
 }

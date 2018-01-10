@@ -13,6 +13,7 @@ import (
 const INGRESS_NETWORK_PREFIX = "10.255."
 
 type Service struct {
+	ID        string
 	Name      string
 	Owner     string
 	OwnerName string
@@ -72,6 +73,7 @@ func buildPortConfigs(config string) []swarm.PortConfig {
 
 func (ss *Services) NewService(base *swarm.Service) *Service {
 	s := &Service{
+		ID:     base.ID,
 		Name:   base.Spec.Name,
 		Labels: make(map[string]string),
 	}
@@ -109,7 +111,7 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 
 func (ss *Services) Put(service *swarm.Service) error {
 	v := ss.NewService(service)
-	return ss.proxy.Put(v.Name, v)
+	return ss.proxy.Put(v.ID, v)
 }
 
 func (ss *Services) Delete(k string) error {
@@ -143,7 +145,7 @@ func (ss *Services) List(recursive bool) (map[string]*Service, error) {
 func (ss *Services) Sync(ls []swarm.Service) error {
 	lsm := make(map[string]interface{})
 	for _, s := range ls {
-		lsm[s.Spec.Name] = ss.NewService(&s)
+		lsm[s.ID] = ss.NewService(&s)
 	}
 	return ss.proxy.Sync(lsm)
 }
