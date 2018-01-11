@@ -13,14 +13,15 @@ import (
 const INGRESS_NETWORK_PREFIX = "10.255."
 
 type Service struct {
-	ID        string
-	Name      string
-	Owner     string
-	OwnerName string
-	Network   string
-	VirtualIP string
-	Ports     []swarm.PortConfig
-	Labels    map[string]string
+	ID             string
+	Name           string
+	Owner          string
+	OwnerName      string
+	Network        string
+	VirtualIP      string
+	ResolutionMode string
+	Ports          []swarm.PortConfig
+	Labels         map[string]string
 }
 
 type Services struct {
@@ -73,9 +74,10 @@ func buildPortConfigs(config string) []swarm.PortConfig {
 
 func (ss *Services) NewService(base *swarm.Service) *Service {
 	s := &Service{
-		ID:     base.ID,
-		Name:   base.Spec.Name,
-		Labels: make(map[string]string),
+		ID:             base.ID,
+		Name:           base.Spec.Name,
+		Labels:         make(map[string]string),
+		ResolutionMode: "dnsrr",
 	}
 	if len(base.Spec.Labels) > 0 {
 		if value, ok := base.Spec.Labels[LABEL_OWNER]; ok {
@@ -102,6 +104,9 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 			s.VirtualIP = strings.Split(entry.Addr, "/")[0]
 			break
 		}
+	}
+	if base.Spec.EndpointSpec != nil {
+		s.ResolutionMode = string(base.Spec.EndpointSpec.Mode)
 	}
 	for _, port := range base.Endpoint.Ports {
 		s.Ports = append(s.Ports, port)
