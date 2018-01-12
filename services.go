@@ -17,7 +17,6 @@ type Service struct {
 	Name           string
 	Owner          string
 	OwnerName      string
-	Network        string
 	VirtualIP      string
 	ResolutionMode string
 	Ports          []swarm.PortConfig
