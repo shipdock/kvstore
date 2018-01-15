@@ -20,7 +20,7 @@ type KVStore struct {
 	RootPath   string
 }
 
-func NewKVStore(storeUrl, connectionTimeout string) (*KVStore, error) {
+func NewKVStore(storeUrl, connectionTimeout, username, password string) (*KVStore, error) {
 	uri, err := url.Parse(storeUrl)
 	if err != nil {
 		return nil, err
@@ -38,16 +38,24 @@ func NewKVStore(storeUrl, connectionTimeout string) (*KVStore, error) {
 	default:
 		return nil, fmt.Errorf("unsupported uri schema: %+v (url:%s)", uri, storeUrl)
 	}
-	timeout, err := time.ParseDuration(connectionTimeout)
-	if err != nil {
-		return nil, err
+	config := &store.Config{}
+	if len(connectionTimeout) > 0 {
+		timeout, err := time.ParseDuration(connectionTimeout)
+		if err != nil {
+			return nil, err
+		}
+		config.ConnectionTimeout = timeout
+	} else {
+		config.ConnectionTimeout = (time.Second * 3)
+	}
+	if len(username) > 0 && len(password) > 0 {
+		config.Username = username
+		config.Password = password
 	}
 	store, err := libkv.NewStore(
 		backend,
 		[]string{uri.Host},
-		&store.Config{
-			ConnectionTimeout: timeout,
-		},
+		config,
 	)
 	if err != nil {
 		return nil, err
