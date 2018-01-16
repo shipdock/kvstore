@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const INGRESS_NETWORK_PREFIX = "10.255."
@@ -19,8 +20,9 @@ type Service struct {
 	OwnerName      string
 	VirtualIP      string
 	ResolutionMode string
-	Ports          []swarm.PortConfig
+	Ports          map[string]*swarm.PortConfig
 	Labels         map[string]string
+	UpdatedAt      time.Time
 }
 
 type Services struct {
@@ -49,8 +51,8 @@ func NewServices(kvstore *KVStore) (*Services, error) {
 	return service, nil
 }
 
-func buildPortConfigs(config string) []swarm.PortConfig {
-	var results []swarm.PortConfig
+func buildPortConfigs(config string) map[string]*swarm.PortConfig {
+	results := make(map[string]*swarm.PortConfig)
 	for _, entry := range strings.Split(config, ",") {
 		pc := &swarm.PortConfig{}
 		kvs := strings.Split(entry, "/")
@@ -66,7 +68,7 @@ func buildPortConfigs(config string) []swarm.PortConfig {
 		pc.TargetPort = uint32(port)
 		pc.PublishedPort = uint32(port)
 		pc.PublishMode = "macvlan"
-		results = append(results, *pc)
+		results[kvs[0] + "/" + string(pc.Protocol)] = pc
 	}
 	return results
 }
@@ -109,9 +111,20 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 	} else {
 		s.ResolutionMode = "dnsrr"
 	}
-	for _, port := range base.Endpoint.Ports {
-		s.Ports = append(s.Ports, port)
+	if s.Ports == nil {
+		s.Ports = make(map[string]*swarm.PortConfig)
 	}
+	for _, port := range base.Endpoint.Ports {
+		key := strconv.FormatUint(uint64(port.PublishedPort), 10)
+		key += "/"
+		if len(port.Protocol) > 0 {
+			key += string(port.Protocol)
+		} else {
+			key += "tcp"
+		}
+		s.Ports[key] = &port
+	}
+	s.UpdatedAt = base.UpdatedAt
 	return s
 }
 
