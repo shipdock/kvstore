@@ -104,8 +104,10 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 			break
 		}
 	}
-	if base.Spec.EndpointSpec != nil {
-		s.ResolutionMode = string(base.Spec.EndpointSpec.Mode)
+	if len(s.VirtualIP) > 0 {
+		s.ResolutionMode = "vip"
+	} else {
+		s.ResolutionMode = "dnsrr"
 	}
 	for _, port := range base.Endpoint.Ports {
 		s.Ports = append(s.Ports, port)
