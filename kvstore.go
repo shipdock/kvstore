@@ -17,6 +17,7 @@ type KVStore struct {
 	Networks   *Networks
 	Volumes    *Volumes
 	Containers *Containers
+	Nodes      *Nodes
 	RootPath   string
 }
 
@@ -83,6 +84,11 @@ func NewKVStore(storeUrl, connectionTimeout, username, password string) (*KVStor
 		return nil, err
 	} else {
 		kvstore.Containers = containers
+	}
+	if nodes, err := NewNodes(kvstore); err != nil {
+		return nil, err
+	} else {
+		kvstore.Nodes = nodes
 	}
 	return kvstore, nil
 }

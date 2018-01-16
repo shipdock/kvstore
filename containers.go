@@ -76,7 +76,7 @@ func NewContainers(kvstore *KVStore) (*Containers, error) {
 	if err != nil {
 		return nil, err
 	}
-	rootPath := TrimRelative(filepath.Clean(path.Join(kvstore.RootPath, "nodes", hostname, "containers")))
+	rootPath := TrimRelative(filepath.Clean(path.Join(kvstore.RootPath, "containers", hostname)))
 	p, err := NewProxy(
 		kvstore,
 		rootPath,
