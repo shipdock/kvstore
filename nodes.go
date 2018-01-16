@@ -102,7 +102,7 @@ func (ss *Nodes) List(recursive bool) (map[string]*Node, error) {
 func (ss *Nodes) Sync(ls []swarm.Node) error {
 	lsm := make(map[string]interface{})
 	for _, s := range ls {
-		lsm[s.Spec.Name] = ss.NewNode(&s)
+		lsm[s.Description.Hostname] = ss.NewNode(&s)
 	}
 	return ss.proxy.Sync(lsm)
 }
