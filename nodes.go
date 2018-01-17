@@ -9,16 +9,18 @@ import (
 )
 
 type Node struct {
-	ID             string
-	Labels         map[string]string
-	Role           string
-	Availability   string
-	Hostname       string
-	NanoCPUs       int64
-	MemoryBytes    int64
-	EngineVersion  string
-	State          string
-	Address        string
+	Hostname      string
+	ID            string
+	Labels        map[string]string
+	Role          string
+	Availability  string
+	Architecture  string
+	OS            string
+	NanoCPUs      int64
+	MemoryBytes   int64
+	EngineVersion string
+	State         string
+	Address       string
 }
 
 type Nodes struct {
@@ -41,24 +43,26 @@ func NewNodes(kvstore *KVStore) (*Nodes, error) {
 	if err != nil {
 		return nil, err
 	}
-	service := &Nodes{
+	node := &Nodes{
 		proxy: p,
 	}
-	return service, nil
+	return node, nil
 }
 
-func (ss *Nodes) NewNode(base *swarm.Node) *Node {
+func (ss *Nodes) NewNode(node *swarm.Node) *Node {
 	s := &Node{
-		Hostname:       base.Description.Hostname,
-		ID:             base.ID,
-		Labels:         base.Spec.Labels,
-		Role:           string(base.Spec.Role),
-		Availability:   string(base.Spec.Availability),
-		NanoCPUs:       base.Description.Resources.NanoCPUs,
-		MemoryBytes:    base.Description.Resources.MemoryBytes,
-		EngineVersion:  base.Description.Engine.EngineVersion,
-		State:          string(base.Status.State),
-		Address:        base.Status.Addr,
+		Hostname:      node.Description.Hostname,
+		ID:            node.ID,
+		Labels:        node.Spec.Labels,
+		Role:          string(node.Spec.Role),
+		Availability:  string(node.Spec.Availability),
+		Architecture:  node.Description.Platform.Architecture,
+		OS:            node.Description.Platform.OS,
+		NanoCPUs:      node.Description.Resources.NanoCPUs,
+		MemoryBytes:   node.Description.Resources.MemoryBytes,
+		EngineVersion: node.Description.Engine.EngineVersion,
+		State:         string(node.Status.State),
+		Address:       node.Status.Addr,
 	}
 	if s.Labels == nil {
 		s.Labels = make(map[string]string)
@@ -66,8 +70,8 @@ func (ss *Nodes) NewNode(base *swarm.Node) *Node {
 	return s
 }
 
-func (ss *Nodes) Put(service *swarm.Node) error {
-	v := ss.NewNode(service)
+func (ss *Nodes) Put(node *swarm.Node) error {
+	v := ss.NewNode(node)
 	return ss.proxy.Put(v.Hostname, v)
 }
 

@@ -68,7 +68,7 @@ func buildPortConfigs(config string) map[string]*swarm.PortConfig {
 		pc.TargetPort = uint32(port)
 		pc.PublishedPort = uint32(port)
 		pc.PublishMode = "macvlan"
-		results[kvs[0] + "/" + string(pc.Protocol)] = pc
+		results[kvs[0]+"/"+string(pc.Protocol)] = pc
 	}
 	return results
 }
