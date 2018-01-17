@@ -73,8 +73,11 @@ func (c *Proxy) List(recursive bool) (map[string]interface{}, error) {
 			continue
 		}
 		v, err := c.unmarshal(kv.Value)
+		// do not return unmarshal error
+		// interface's struct can be changed and sometimes it can be fail
+		// just ignore unmarshal error (treat not exist) to overwrite interface struct
 		if err != nil {
-			return nil, err
+			continue
 		}
 		rl[path.Base(kv.Key)] = v
 	}
