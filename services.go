@@ -13,6 +13,11 @@ import (
 
 const INGRESS_NETWORK_PREFIX = "10.255."
 
+const (
+	VirtualIPTypeShipdock = "shipdock"
+	VirtualIPTypeDefault  = "swarm"
+)
+
 type Service struct {
 	ID                  string
 	Name                string
@@ -20,6 +25,7 @@ type Service struct {
 	Owner               string
 	OwnerName           string
 	VirtualIP           string
+	VirtualIPType       string
 	ResolutionMode      string
 	Ports               map[string]*swarm.PortConfig
 	Labels              map[string]string
@@ -68,7 +74,6 @@ func buildPortConfigs(config string) map[string]*swarm.PortConfig {
 		}
 		pc.TargetPort = uint32(port)
 		pc.PublishedPort = uint32(port)
-		pc.PublishMode = "macvlan"
 		results[kvs[0]+"/"+string(pc.Protocol)] = pc
 	}
 	return results
@@ -80,6 +85,7 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 		Name:                base.Spec.Name,
 		ShipdockServiceName: base.Spec.Name,
 		Labels:              make(map[string]string),
+		VirtualIPType:       VirtualIPTypeDefault,
 		ResolutionMode:      "dnsrr",
 	}
 	if len(base.Spec.Labels) > 0 {
@@ -91,6 +97,7 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 		}
 		if value, ok := base.Spec.Labels[LABEL_SERVICE_IP]; ok {
 			s.VirtualIP = value
+			s.VirtualIPType = VirtualIPTypeShipdock
 		}
 		if value, ok := base.Spec.Labels[LABEL_SERVICE_PORTS]; ok {
 			s.Ports = buildPortConfigs(value)
