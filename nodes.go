@@ -8,23 +8,36 @@ import (
 	"path/filepath"
 )
 
-type Node struct {
-	Hostname      string
-	ID            string
-	Labels        map[string]string
-	Role          string
-	Availability  string
-	Architecture  string
-	OS            string
-	NanoCPUs      int64
-	MemoryBytes   int64
-	EngineVersion string
-	State         string
-	Address       string
-}
-
 type Nodes struct {
 	proxy *Proxy
+}
+
+type Node struct {
+	Hostname     string
+	Role         string
+	Availability string
+	CPU          int64
+	MEM          int64
+	State        string
+	Address      string
+	Labels       map[string]string
+}
+
+func (ss *Nodes) NewNode(node *swarm.Node) *Node {
+	s := &Node{
+		Hostname:     node.Spec.Name,
+		Role:         string(node.Spec.Role),
+		Availability: string(node.Spec.Availability),
+		CPU:          node.Description.Resources.MemoryBytes,
+		MEM:          node.Description.Resources.NanoCPUs,
+		State:        string(node.Status.State),
+		Address:      string(node.Status.Addr),
+		Labels:       node.Spec.Labels,
+	}
+	if s.Labels == nil {
+		s.Labels = make(map[string]string)
+	}
+	return s
 }
 
 func NewNodes(kvstore *KVStore) (*Nodes, error) {
@@ -47,27 +60,6 @@ func NewNodes(kvstore *KVStore) (*Nodes, error) {
 		proxy: p,
 	}
 	return node, nil
-}
-
-func (ss *Nodes) NewNode(node *swarm.Node) *Node {
-	s := &Node{
-		Hostname:      node.Description.Hostname,
-		ID:            node.ID,
-		Labels:        node.Spec.Labels,
-		Role:          string(node.Spec.Role),
-		Availability:  string(node.Spec.Availability),
-		Architecture:  node.Description.Platform.Architecture,
-		OS:            node.Description.Platform.OS,
-		NanoCPUs:      node.Description.Resources.NanoCPUs,
-		MemoryBytes:   node.Description.Resources.MemoryBytes,
-		EngineVersion: node.Description.Engine.EngineVersion,
-		State:         string(node.Status.State),
-		Address:       node.Status.Addr,
-	}
-	if s.Labels == nil {
-		s.Labels = make(map[string]string)
-	}
-	return s
 }
 
 func (ss *Nodes) Put(node *swarm.Node) error {
