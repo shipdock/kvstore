@@ -25,7 +25,7 @@ type Node struct {
 
 func (ss *Nodes) NewNode(node *swarm.Node) *Node {
 	s := &Node{
-		Hostname:     node.Spec.Name,
+		Hostname:     node.Description.Hostname,
 		Role:         string(node.Spec.Role),
 		Availability: string(node.Spec.Availability),
 		CPU:          node.Description.Resources.MemoryBytes,
