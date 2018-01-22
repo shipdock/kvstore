@@ -29,6 +29,7 @@ type Container struct {
 func containerName(container *types.Container) string {
 	result := TrimRelative(container.Names[0])
 	result = strings.TrimSuffix(result, filepath.Ext(result))
+	result = result + "-" + container.ID[0:8]
 	return result
 }
 
