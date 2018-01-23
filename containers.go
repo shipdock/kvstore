@@ -54,6 +54,9 @@ func NewContainer(base *types.Container) *Container {
 		Labels:      make(map[string]string),
 	}
 	for k, v := range base.NetworkSettings.Networks {
+		if k == "ingress" {
+			continue
+		}
 		n := &NetInfo{
 			Name:       k,
 			Gateway:    v.Gateway,
