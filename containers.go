@@ -22,6 +22,8 @@ type Container struct {
 	Name        string
 	ServiceName string
 	TaskNum     string
+	Owner       string
+	OwnerName   string
 	Networks    map[string]NetInfo
 	Labels      map[string]string
 }
@@ -65,8 +67,16 @@ func NewContainer(base *types.Container) *Container {
 		}
 		c.Networks[k] = *n
 	}
-	for k, v := range base.Labels {
-		c.Labels[k] = v
+	if len(base.Labels) > 0 {
+		for k, v := range base.Labels {
+			c.Labels[k] = v
+		}
+		if val, ok := base.Labels["com.docker.swarm.owner"]; ok {
+			c.Owner = val
+		}
+		if val, ok := base.Labels["com.docker.swarm.owner.name"]; ok {
+			c.OwnerName = val
+		}
 	}
 	return c
 }

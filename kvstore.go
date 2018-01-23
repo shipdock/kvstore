@@ -1,11 +1,13 @@
 package kvstore
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/shipdock/libkv"
 	"github.com/shipdock/libkv/store"
 	"github.com/shipdock/libkv/store/consul"
 	"github.com/shipdock/libkv/store/etcd"
+	log "github.com/sirupsen/logrus"
 	"net/url"
 	"strings"
 	"time"
@@ -95,6 +97,28 @@ func NewKVStore(storeUrl, connectionTimeout, username, password string) (*KVStor
 
 func (k *KVStore) Close() {
 	k.Store.Close()
+}
+
+func (k *KVStore) Put(key string, val interface{}) error {
+	log.Debugf("PUT:%s", key)
+	bv, err := json.Marshal(val)
+	if err != nil {
+		return err
+	}
+	if err := k.Store.Put(key, bv, &store.WriteOptions{IsDir: false}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k *KVStore) Remove(key string) error {
+	log.Debugf("DEL:%s", key)
+	if err := k.Store.DeleteTree(key); err != nil {
+		if err != store.ErrKeyNotFound {
+			return err
+		}
+	}
+	return nil
 }
 
 func init() {
