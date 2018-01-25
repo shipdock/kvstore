@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"path"
 )
 
 type KVStore struct {
@@ -111,6 +112,23 @@ func (k *KVStore) Put(key string, val interface{}) error {
 	return nil
 }
 
+func (k *KVStore) deleteEmptyParents(target string) error {
+	if target == "." || target == "/" {
+		return nil
+	}
+	kvs, err := k.Store.List(target, true)
+	if err != nil {
+		return err
+	}
+	if len(kvs) > 0 {
+		return nil
+	}
+	if err := k.Store.DeleteTree(target); err != nil {
+		return err
+	}
+	return k.deleteEmptyParents(path.Dir(target))
+}
+
 func (k *KVStore) Remove(key string) error {
 	log.Debugf("DEL:%s", key)
 	if err := k.Store.DeleteTree(key); err != nil {
@@ -118,6 +136,7 @@ func (k *KVStore) Remove(key string) error {
 			return err
 		}
 	}
+	k.deleteEmptyParents(path.Dir(key))
 	return nil
 }
 
