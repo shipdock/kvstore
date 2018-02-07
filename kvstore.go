@@ -129,14 +129,16 @@ func (k *KVStore) deleteEmptyParents(target string) error {
 	return k.deleteEmptyParents(path.Dir(target))
 }
 
-func (k *KVStore) Remove(key string) error {
+func (k *KVStore) Remove(key string, removeEmptyParents bool) error {
 	log.Debugf("DEL:%s", key)
 	if err := k.Store.DeleteTree(key); err != nil {
 		if err != store.ErrKeyNotFound {
 			return err
 		}
 	}
-	k.deleteEmptyParents(path.Dir(key))
+	if removeEmptyParents == true {
+		k.deleteEmptyParents(path.Dir(key))
+	}
 	return nil
 }
 
