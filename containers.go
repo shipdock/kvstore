@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"github.com/shipdock/libkv/store"
 )
 
 type NetInfo struct {
@@ -90,6 +91,7 @@ func NewContainer(base *types.Container, networks map[string]*Network) *Containe
 type Containers struct {
 	proxy *Proxy
 	networks *Networks
+	containersPath string
 }
 
 func NewContainers(kvstore *KVStore, networks *Networks) (*Containers, error) {
@@ -115,6 +117,7 @@ func NewContainers(kvstore *KVStore, networks *Networks) (*Containers, error) {
 	Container := &Containers{
 		proxy: p,
 		networks: networks,
+		containersPath: path.Join(kvstore.RootPath, "containers"),
 	}
 	return Container, nil
 }
@@ -154,6 +157,24 @@ func (ss *Containers) List(recursive bool) (map[string]*Container, error) {
 		rs[k] = v.(*Container)
 	}
 	return rs, nil
+}
+
+// List() returns this host's container list
+// ListAll returns all containers in this cluster
+func (ss *Containers) ListAll() (map[string]*Container, error) {
+	kvs, err := ss.proxy.kvstore.List(ss.containersPath, true)
+	if err != nil && err != store.ErrKeyNotFound {
+		return nil, err
+	}
+	results := make(map[string]*Container)
+	for _, kv := range kvs {
+		c := &Container{}
+		if err := json.Unmarshal(kv.Value, c); err != nil {
+			continue
+		}
+		results[c.Name] = c
+	}
+	return results, nil
 }
 
 func (ss *Containers) Sync(ls []types.Container) error {
