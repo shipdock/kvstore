@@ -12,6 +12,7 @@ import (
 
 type NetInfo struct {
 	Name       string
+	Driver     string
 	IPAddress  string
 	Gateway    string
 	MacAddress string
@@ -35,7 +36,7 @@ func containerName(container *types.Container) string {
 	return result
 }
 
-func NewContainer(base *types.Container) *Container {
+func NewContainer(base *types.Container, networks map[string]*Network) *Container {
 	sn := ""
 	tn := ""
 	if len(base.Labels) > 0 {
@@ -59,8 +60,13 @@ func NewContainer(base *types.Container) *Container {
 		if k == "ingress" {
 			continue
 		}
+		net, ok := networks[v.NetworkID]
+		if !ok {
+			continue
+		}
 		n := &NetInfo{
 			Name:       k,
+			Driver:     net.Driver,
 			Gateway:    v.Gateway,
 			IPAddress:  v.IPAddress,
 			MacAddress: v.MacAddress,
@@ -83,9 +89,10 @@ func NewContainer(base *types.Container) *Container {
 
 type Containers struct {
 	proxy *Proxy
+	networks *Networks
 }
 
-func NewContainers(kvstore *KVStore) (*Containers, error) {
+func NewContainers(kvstore *KVStore, networks *Networks) (*Containers, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return nil, err
@@ -107,12 +114,17 @@ func NewContainers(kvstore *KVStore) (*Containers, error) {
 	}
 	Container := &Containers{
 		proxy: p,
+		networks: networks,
 	}
 	return Container, nil
 }
 
 func (ss *Containers) Put(container *types.Container) error {
-	c := NewContainer(container)
+	networks, err := ss.GetNetworkIDMap()
+	if err != nil {
+		return err
+	}
+	c := NewContainer(container, networks)
 	return ss.proxy.Put(c.Name, c)
 }
 
@@ -146,9 +158,25 @@ func (ss *Containers) List(recursive bool) (map[string]*Container, error) {
 
 func (ss *Containers) Sync(ls []types.Container) error {
 	lsm := make(map[string]interface{})
+	networks, err := ss.GetNetworkIDMap()
+	if err != nil {
+		return err
+	}
 	for _, container := range ls {
-		c := NewContainer(&container)
+		c := NewContainer(&container, networks)
 		lsm[c.Name] = c
 	}
 	return ss.proxy.Sync(lsm)
+}
+
+func (ss *Containers) GetNetworkIDMap() (map[string]*Network, error) {
+	base, err := ss.networks.List(true)
+	if err != nil {
+		return nil, err
+	}
+	results := make(map[string]*Network)
+	for _, v := range base {
+		results[v.ID] = v
+	}
+	return results, nil
 }

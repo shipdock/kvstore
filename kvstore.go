@@ -83,7 +83,7 @@ func NewKVStore(storeUrl, connectionTimeout, username, password string) (*KVStor
 	} else {
 		kvstore.Volumes = volumes
 	}
-	if containers, err := NewContainers(kvstore); err != nil {
+	if containers, err := NewContainers(kvstore, kvstore.Networks); err != nil {
 		return nil, err
 	} else {
 		kvstore.Containers = containers
