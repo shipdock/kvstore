@@ -19,6 +19,11 @@ type NetInfo struct {
 	MacAddress string
 }
 
+type MountInfo struct {
+	Name       string
+	Driver     string
+}
+
 type Container struct {
 	ID          string
 	Name        string
@@ -27,6 +32,7 @@ type Container struct {
 	Owner       string
 	OwnerName   string
 	Networks    map[string]NetInfo
+	Mounts      map[string]MountInfo
 	Labels      map[string]string
 }
 
@@ -55,6 +61,7 @@ func NewContainer(base *types.Container, networks map[string]*Network) *Containe
 		ServiceName: sn,
 		TaskNum:     tn,
 		Networks:    make(map[string]NetInfo),
+		Mounts:      make(map[string]MountInfo),
 		Labels:      make(map[string]string),
 	}
 	for k, v := range base.NetworkSettings.Networks {
@@ -83,6 +90,12 @@ func NewContainer(base *types.Container, networks map[string]*Network) *Containe
 		}
 		if val, ok := base.Labels["com.docker.swarm.owner.name"]; ok {
 			c.OwnerName = val
+		}
+	}
+	for _, m := range base.Mounts {
+		c.Mounts[m.Name] = *&MountInfo{
+			Name: m.Name,
+			Driver: m.Driver,
 		}
 	}
 	return c
