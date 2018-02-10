@@ -166,14 +166,17 @@ func (ss *Services) tryGetUntil(k string) (interface{}, error) {
 	return nil, err
 }
 
-func (ss *Services) Get(k string) (*Service, error) {
-	v, err := ss.tryGetUntil(k)
+func (ss *Services) Get(sn, id string) (*Service, error) {
+	v, err := ss.tryGetUntil(sn)
 	if err != nil {
 		return nil, err
 	}
 	cv, ok := v.(*Service)
 	if !ok {
 		return nil, fmt.Errorf("type assertion failed")
+	}
+	if cv.ID != id {
+		return nil, fmt.Errorf("key not found : %s:%s", sn, id)
 	}
 	return cv, nil
 }
