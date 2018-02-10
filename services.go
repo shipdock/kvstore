@@ -12,6 +12,8 @@ import (
 )
 
 const INGRESS_NETWORK_PREFIX = "10.255."
+const MAX_RETRY_COUNT = 10
+const RETRY_TERM = 1*time.Second
 
 const (
 	VirtualIPTypeShipdock = "shipdock"
@@ -149,8 +151,23 @@ func (ss *Services) Delete(k string) error {
 	return ss.proxy.Delete(k)
 }
 
-func (ss *Services) Get(k string) (*Service, error) {
+func (ss *Services) tryGetUntil(k string) (interface{}, error) {
 	v, err := ss.proxy.Get(k)
+	if err == nil && v != nil {
+		return v, nil
+	}
+	for i:=0; i < MAX_RETRY_COUNT; i++ {
+		time.Sleep(RETRY_TERM)
+		v, err := ss.proxy.Get(k)
+		if err == nil && v != nil {
+			return v, nil
+		}
+	}
+	return nil, err
+}
+
+func (ss *Services) Get(k string) (*Service, error) {
+	v, err := ss.tryGetUntil(k)
 	if err != nil {
 		return nil, err
 	}
