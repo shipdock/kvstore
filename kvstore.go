@@ -112,7 +112,7 @@ func (k *KVStore) Put(key string, val interface{}) error {
 	return nil
 }
 
-func (k *KVStore) deleteEmptyParents(target string) error {
+func (k *KVStore) RemoveEmptyDirectory(target string) error {
 	if target == "." || target == "/" {
 		return nil
 	}
@@ -126,7 +126,7 @@ func (k *KVStore) deleteEmptyParents(target string) error {
 	if err := k.Store.DeleteTree(target); err != nil {
 		return err
 	}
-	return k.deleteEmptyParents(path.Dir(target))
+	return k.RemoveEmptyDirectory(path.Dir(target))
 }
 
 func (k *KVStore) Remove(key string, removeEmptyParents bool) error {
@@ -137,7 +137,7 @@ func (k *KVStore) Remove(key string, removeEmptyParents bool) error {
 		}
 	}
 	if removeEmptyParents == true {
-		k.deleteEmptyParents(path.Dir(key))
+		k.RemoveEmptyDirectory(path.Dir(key))
 	}
 	return nil
 }
