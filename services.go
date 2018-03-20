@@ -29,7 +29,7 @@ type Service struct {
 	VirtualIP           string
 	VirtualIPType       string
 	ResolutionMode      string
-	Ports               map[string]*swarm.PortConfig
+	Ports               map[string]swarm.PortConfig
 	Labels              map[string]string
 	UpdatedAt           time.Time
 }
@@ -60,8 +60,8 @@ func NewServices(kvstore *KVStore) (*Services, error) {
 	return service, nil
 }
 
-func buildPortConfigs(config string) map[string]*swarm.PortConfig {
-	results := make(map[string]*swarm.PortConfig)
+func buildPortConfigs(config string) map[string]swarm.PortConfig {
+	results := make(map[string]swarm.PortConfig)
 	for _, entry := range strings.Split(config, ",") {
 		pc := &swarm.PortConfig{}
 		kvs := strings.Split(entry, "/")
@@ -76,7 +76,7 @@ func buildPortConfigs(config string) map[string]*swarm.PortConfig {
 		}
 		pc.TargetPort = uint32(port)
 		pc.PublishedPort = uint32(port)
-		results[kvs[0]+"/"+string(pc.Protocol)] = pc
+		results[kvs[0]+"/"+string(pc.Protocol)] = *pc
 	}
 	return results
 }
@@ -126,7 +126,7 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 		s.ResolutionMode = "dnsrr"
 	}
 	if s.Ports == nil {
-		s.Ports = make(map[string]*swarm.PortConfig)
+		s.Ports = make(map[string]swarm.PortConfig)
 	}
 	for _, port := range base.Endpoint.Ports {
 		key := strconv.FormatUint(uint64(port.PublishedPort), 10)
@@ -136,7 +136,7 @@ func (ss *Services) NewService(base *swarm.Service) *Service {
 		} else {
 			key += "tcp"
 		}
-		s.Ports[key] = &port
+		s.Ports[key] = port
 	}
 	s.UpdatedAt = base.UpdatedAt
 	return s
